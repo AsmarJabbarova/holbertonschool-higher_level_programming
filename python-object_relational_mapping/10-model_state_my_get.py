@@ -1,29 +1,38 @@
 #!/usr/bin/python3
 """
-    The `Get a state` module.
+Module for fetching all states containing letter 'a'.
 """
-
-from sys import argv
-from model_state import Base, State
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import (create_engine)
+from sys import argv
 
+from model_state import Base, State
+
+# Run only executed
 if __name__ == "__main__":
-    user = argv[1]
-    passwd = argv[2]
-    db = argv[3]
-    engine = create_engine('mysql+mysqldb://{}:{}@localhost/{}'
-                           .format(user, passwd, db),
-                           pool_pre_ping=True)
 
+    # Engine creation with mysql and mysqldb DBAPI
+    engine = create_engine("mysql+mysqldb://{}:{}@localhost:3306/{}"
+                           .format(argv[1], argv[2], argv[3]))
+
+    # Creating all classes in DB
+    Base.metadata.create_all(engine)
+
+    # Creating Session and its instance
     Session = sessionmaker(bind=engine)
     session = Session()
-    state = session.query(State)\
-                   .where(State.name.like(argv[4]))\
-                   .order_by(State.id)\
-                   .first()
-    try:
-        print("{}".format(state.id))
-    except Exception:
+
+    # The Query
+    state = (session.query(State)
+             .filter(State.name == argv[4])
+             .first())
+
+    # Printing the result
+    if state is None:
         print("Not found")
-    session.close()
+    else:
+        print(state.id)
+
+    # Closing the session
+    if session:
+        session.close()
